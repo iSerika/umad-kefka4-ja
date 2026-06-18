@@ -224,7 +224,7 @@ const keys = {};
 window.addEventListener('keydown', e => keys[e.key.toLowerCase()] = true);
 window.addEventListener('keyup', e => keys[e.key.toLowerCase()] = false);
 
-const pointerMove = { active: false, targetX: null, targetY: null, movedThisFrame: false };
+const pointerMove = { active: false, targetX: null, targetY: null, movedThisFrame: false, pointerDown: false, pointerId: null };
 canvas.style.touchAction = 'none';
 
 function getCanvasPoint(e) {
@@ -251,6 +251,8 @@ function clearPointerMove() {
     pointerMove.targetX = null;
     pointerMove.targetY = null;
     pointerMove.movedThisFrame = false;
+    pointerMove.pointerDown = false;
+    pointerMove.pointerId = null;
 }
 
 function setPointerTarget(point) {
@@ -266,15 +268,24 @@ canvas.addEventListener('pointerdown', function(e) {
         clearPointerMove();
         return;
     }
+    pointerMove.pointerDown = true;
+    pointerMove.pointerId = e.pointerId;
     setPointerTarget(point);
     if (e.pointerId !== undefined && canvas.setPointerCapture) canvas.setPointerCapture(e.pointerId);
     e.preventDefault();
 });
 
 canvas.addEventListener('pointermove', function(e) {
-    if (!pointerMove.active) return;
+    if (!pointerMove.pointerDown || pointerMove.pointerId !== e.pointerId) return;
     setPointerTarget(getCanvasPoint(e));
     e.preventDefault();
+});
+
+canvas.addEventListener('pointerup', function(e) {
+    if (pointerMove.pointerId === e.pointerId) {
+        pointerMove.pointerDown = false;
+        pointerMove.pointerId = null;
+    }
 });
 
 canvas.addEventListener('pointercancel', clearPointerMove);
